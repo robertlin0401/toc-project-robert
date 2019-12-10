@@ -25,7 +25,20 @@ class TocMachine(GraphMachine):
 
     def on_enter_state1(self, event):
         print("I'm entering state1")
-
+        if len(self.command) < 3:
+            reply_token = event.reply_token
+            send_text_message(reply_token, "wrong command")
+            self.go_back()
+            return
+        count = 0
+        for i in self.keyword:
+            if i == self.command[1]:
+                self.result[count] = self.command[2]
+                reply_token = event.reply_token
+                send_text_message(reply_token, "OK")
+                self.go_back()
+                return
+            count = count + 1
         self.keyword.append(self.command[1])
         self.result.append(self.command[2])
         reply_token = event.reply_token
@@ -37,13 +50,21 @@ class TocMachine(GraphMachine):
 
     def on_enter_state2(self, event):
         print("I'm entering state2")
-
+        if len(self.command) < 2:
+            reply_token = event.reply_token
+            send_text_message(reply_token, "wrong command")
+            self.go_back()
+            return
         count = 0
         for i in self.keyword:
             if i == self.command[1]:
                 reply_token = event.reply_token
                 send_text_message(reply_token, self.result[count])
+                self.go_back()
+                return
             count = count + 1
+        reply_token = event.reply_token
+        send_text_message(reply_token, "result not found")
         self.go_back()
 
     def on_exit_state2(self):
