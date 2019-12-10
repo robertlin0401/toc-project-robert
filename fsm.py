@@ -15,19 +15,19 @@ class TocMachine(GraphMachine):
         text = event.message.text
         self.command = text.split(',')
         text = self.command[0]
-        return text.lower() == "remember"
+        return text.lower() == "insert"
 
     def is_going_to_state2(self, event):
         text = event.message.text
         self.command = text.split(',')
         text = self.command[0]
-        return text.lower() == "show"
+        return text.lower() == "print"
 
     def is_going_to_state3(self, event):
         text = event.message.text
         self.command = text.split(',')
         text = self.command[0]
-        return text.lower() == "forget"
+        return text.lower() == "delete"
 
     def on_enter_state1(self, event):
         print("I'm entering state1")
@@ -55,12 +55,53 @@ class TocMachine(GraphMachine):
         print("Leaving state1")
 
     def on_enter_state2(self, event):
-        print("I'm entering state2")
+        
+        # command error handling
         if len(self.command) < 2:
             reply_token = event.reply_token
             send_text_message(reply_token, "wrong command")
             self.go_back()
             return
+        
+        # print all
+        if self.command[1] == "all":
+            if len(self.keyword) == 0:
+                reply_token = event.reply_token
+                send_text_message(reply_token, "result not found")
+                self.go_back()
+                return
+            temp = []
+            count = 0
+            for i in self.keyword:
+                temp.append(i)
+                temp[count] = temp[count] + ':\n' + self.result[count] + '\n\n'
+                count = count + 1
+            output = ""
+            for i in temp:
+                output = output + i
+            output = output[0:len(output)-2]
+            reply_token = event.reply_token
+            send_text_message(reply_token, output)
+            self.go_back()
+            return
+
+        # print index
+        if self.command[1] == "index":
+            if len(self.keyword) == 0:
+                reply_token = event.reply_token
+                send_text_message(reply_token, "result not found")
+                self.go_back()
+                return
+            output = ""
+            for i in self.keyword:
+                output = output + i + '\n'
+            output = output[0:len(output)-1]
+            reply_token = event.reply_token
+            send_text_message(reply_token, output)
+            self.go_back()
+            return
+
+        # print target
         count = 0
         for i in self.keyword:
             if i == self.command[1]:
@@ -77,12 +118,24 @@ class TocMachine(GraphMachine):
         print("Leaving state2")
 
     def on_enter_state3(self, event):
-        print("I'm entering state3")
+        
+        # command error handling
         if len(self.command) < 2:
             reply_token = event.reply_token
             send_text_message(reply_token, "wrong command")
             self.go_back()
             return
+
+        # delete all
+        if self.command[1] == "all":
+            self.keyword = []
+            self.result = []
+            reply_token = event.reply_token
+            send_text_message(reply_token, "OK")
+            self.go_back()
+            return
+
+        # delete target
         count = 0
         for i in self.keyword:
             if i == self.command[1]:
