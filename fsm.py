@@ -30,16 +30,19 @@ class TocMachine(GraphMachine):
         return text.lower() == "delete"
 
     def on_enter_state1(self, event):
-        print("I'm entering state1")
+        
+        # command error handling
         if len(self.command) < 3:
             reply_token = event.reply_token
             send_text_message(reply_token, "wrong command")
             self.go_back()
             return
+
+        # insert
         count = 0
         for i in self.keyword:
             if i == self.command[1]:
-                self.result[count] = self.command[2]
+                self.result[count] += '\n' + self.command[2]
                 reply_token = event.reply_token
                 send_text_message(reply_token, "OK")
                 self.go_back()
@@ -134,6 +137,42 @@ class TocMachine(GraphMachine):
             send_text_message(reply_token, "OK")
             self.go_back()
             return
+
+        # delete single result
+        if len(self.command) == 3:
+            count = 0
+            for i in self.keyword:
+                if i == self.command[1]:
+                    break
+                count = count + 1
+            if count == len(self.keyword):
+                reply_token = event.reply_token
+                send_text_message(reply_token, "result not found")
+                self.go_back()
+                return
+            resultIndex = -1
+            try:
+                resultIndex = int(self.command[2])
+            except:
+                reply_token = event.reply_token
+                send_text_message(reply_token, "wrong command")
+                self.go_back()
+            if not (resultIndex >= 0 and resultIndex < len(self.result[count].split('\n'))):
+                reply_token = event.reply_token
+                send_text_message(reply_token, "wrong command")
+                self.go_back()
+                return
+            if len(self.result[count]) != 1:
+                temp = self.result[count].split('\n')
+                temp.pop(int(self.command[2]))
+                self.result[count] = ""
+                for i in temp:
+                    self.result[count] += i + '\n'
+                self.result[count] = self.result[count][0:len(self.result[count])-1]
+                reply_token = event.reply_token
+                send_text_message(reply_token, "OK")
+                self.go_back()
+                return
 
         # delete target
         count = 0
