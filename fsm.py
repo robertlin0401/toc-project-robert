@@ -15,13 +15,19 @@ class TocMachine(GraphMachine):
         text = event.message.text
         self.command = text.split(',')
         text = self.command[0]
-        return text.lower() == "learn"
+        return text.lower() == "remember"
 
     def is_going_to_state2(self, event):
         text = event.message.text
         self.command = text.split(',')
         text = self.command[0]
-        return text.lower() == "find"
+        return text.lower() == "show"
+
+    def is_going_to_state3(self, event):
+        text = event.message.text
+        self.command = text.split(',')
+        text = self.command[0]
+        return text.lower() == "forget"
 
     def on_enter_state1(self, event):
         print("I'm entering state1")
@@ -69,3 +75,27 @@ class TocMachine(GraphMachine):
 
     def on_exit_state2(self):
         print("Leaving state2")
+
+    def on_enter_state3(self, event):
+        print("I'm entering state3")
+        if len(self.command) < 2:
+            reply_token = event.reply_token
+            send_text_message(reply_token, "wrong command")
+            self.go_back()
+            return
+        count = 0
+        for i in self.keyword:
+            if i == self.command[1]:
+                self.keyword.pop(count)
+                self.result.pop(count)
+                reply_token = event.reply_token
+                send_text_message(reply_token, "OK")
+                self.go_back()
+                return
+            count = count + 1
+        reply_token = event.reply_token
+        send_text_message(reply_token, "result not found")
+        self.go_back()
+
+    def on_exit_state3(self):
+        print("Leaving state3")
